@@ -9,18 +9,24 @@ import {
   type Connection,
   type Edge,
   type Node,
+  type EdgeMouseHandler,
   BackgroundVariant,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useWorkflowStore } from '@/stores/workflowStore';
 import { RequestNode } from './RequestNode';
+import type { WorkflowEdge } from '@/types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const nodeTypes: Record<string, any> = {
   request: RequestNode,
 };
 
-export function WorkflowCanvas() {
+interface WorkflowCanvasProps {
+  onEdgeClick?: (edge: WorkflowEdge) => void;
+}
+
+export function WorkflowCanvas({ onEdgeClick }: WorkflowCanvasProps) {
   const {
     currentWorkflow,
     updateNodePosition,
@@ -30,6 +36,14 @@ export function WorkflowCanvas() {
     executionResults,
     currentNodeId,
   } = useWorkflowStore();
+
+  // Handler for node deletion
+  const handleDeleteNode = useCallback(
+    (nodeId: string) => {
+      removeNode(nodeId);
+    },
+    [removeNode]
+  );
 
   // Convert workflow nodes to ReactFlow nodes
   const initialNodes = useMemo(() => {
@@ -45,10 +59,11 @@ export function WorkflowCanvas() {
           request: node.request,
           isRunning: currentNodeId === node.id,
           status: result?.status,
+          onDelete: handleDeleteNode,
         },
       };
     });
-  }, [currentWorkflow, executionResults, currentNodeId]);
+  }, [currentWorkflow, executionResults, currentNodeId, handleDeleteNode]);
 
   // Convert workflow edges to ReactFlow edges
   const initialEdges: Edge[] = useMemo(() => {
@@ -59,10 +74,12 @@ export function WorkflowCanvas() {
       source: edge.source,
       target: edge.target,
       animated: currentNodeId === edge.target,
-      style: { strokeWidth: 2 },
-      label: edge.mappings.length > 0 ? `${edge.mappings.length} mappings` : undefined,
-      labelStyle: { fontSize: 10 },
-      labelBgStyle: { fill: 'white' },
+      style: { strokeWidth: 2, cursor: 'pointer' },
+      label: edge.mappings.length > 0 ? `${edge.mappings.length} mapping${edge.mappings.length > 1 ? 's' : ''} (click to edit)` : 'Click to add mapping',
+      labelStyle: { fontSize: 10, cursor: 'pointer' },
+      labelBgStyle: { fill: 'white', cursor: 'pointer' },
+      labelBgPadding: [4, 2] as [number, number],
+      labelBgBorderRadius: 4,
     }));
   }, [currentWorkflow, currentNodeId]);
 
@@ -106,6 +123,18 @@ export function WorkflowCanvas() {
     [removeNode]
   );
 
+  // Handle edge click to open mapping editor
+  const handleEdgeClick: EdgeMouseHandler = useCallback(
+    (_, edge) => {
+      if (!currentWorkflow || !onEdgeClick) return;
+      const workflowEdge = currentWorkflow.edges.find((e) => e.id === edge.id);
+      if (workflowEdge) {
+        onEdgeClick(workflowEdge);
+      }
+    },
+    [currentWorkflow, onEdgeClick]
+  );
+
   if (!currentWorkflow) {
     return (
       <div className="h-full flex items-center justify-center text-muted-foreground">
@@ -125,6 +154,7 @@ export function WorkflowCanvas() {
         onNodeDragStop={onNodeDragStop}
         onEdgesDelete={onEdgesDelete}
         onNodesDelete={onNodesDelete}
+        onEdgeClick={handleEdgeClick}
         nodeTypes={nodeTypes}
         fitView
         proOptions={{ hideAttribution: true }}

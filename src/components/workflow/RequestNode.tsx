@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import type { Request, HttpMethod } from '@/types';
 import { cn } from '@/lib/utils';
+import { X } from 'lucide-react';
 
 const METHOD_COLORS: Record<HttpMethod, string> = {
   GET: 'bg-green-100 text-green-700 border-green-300',
@@ -12,16 +13,18 @@ const METHOD_COLORS: Record<HttpMethod, string> = {
 };
 
 interface RequestNodeProps {
+  id: string;
   data: {
     request: Request;
     isRunning?: boolean;
     status?: 'pending' | 'running' | 'success' | 'error';
+    onDelete?: (id: string) => void;
   };
   selected?: boolean;
 }
 
-function RequestNodeComponent({ data, selected }: RequestNodeProps) {
-  const { request, isRunning, status } = data;
+function RequestNodeComponent({ id, data, selected }: RequestNodeProps) {
+  const { request, isRunning, status, onDelete } = data;
 
   const getStatusBorder = () => {
     if (isRunning) return 'ring-2 ring-primary animate-pulse';
@@ -35,14 +38,30 @@ function RequestNodeComponent({ data, selected }: RequestNodeProps) {
     }
   };
 
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDelete) {
+      onDelete(id);
+    }
+  };
+
   return (
     <div
       className={cn(
-        'px-4 py-3 shadow-md rounded-lg bg-white border-2 min-w-[180px]',
+        'px-4 py-3 shadow-md rounded-lg bg-white border-2 min-w-[180px] relative group',
         selected ? 'border-primary' : 'border-gray-200',
         getStatusBorder()
       )}
     >
+      {/* Delete button */}
+      <button
+        onClick={handleDelete}
+        className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
+        title="Delete node"
+      >
+        <X className="h-3 w-3" />
+      </button>
+
       <Handle
         type="target"
         position={Position.Left}
