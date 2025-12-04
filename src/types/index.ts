@@ -74,3 +74,42 @@ export interface ChainExecutionResult {
   totalTime: number;
   success: boolean;
 }
+
+// Workflow Types
+export interface ParameterMapping {
+  id: string;
+  sourceJsonPath: string;  // $.data.token
+  targetField: string;     // headers.Authorization
+  targetType: 'header' | 'param' | 'body' | 'url';
+}
+
+export interface WorkflowNode {
+  id: string;
+  type: 'request';
+  request: Request;
+  position: { x: number; y: number };
+}
+
+export interface WorkflowEdge {
+  id: string;
+  source: string;
+  target: string;
+  mappings: ParameterMapping[];
+}
+
+export interface Workflow {
+  id: string;
+  name: string;
+  nodes: WorkflowNode[];
+  edges: WorkflowEdge[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WorkflowNodeResult {
+  nodeId: string;
+  request: Request;
+  response: RequestResponse | null;
+  error: string | null;
+  status: 'pending' | 'running' | 'success' | 'error';
+}

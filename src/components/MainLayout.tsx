@@ -7,11 +7,13 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sidebar } from '@/components/tree/Sidebar';
 import { ChainSidebar } from '@/components/chain/ChainSidebar';
+import { WorkflowSidebar } from '@/components/workflow/WorkflowSidebar';
 import { RequestPanel } from '@/components/request/RequestPanel';
 import { ChainPanel } from '@/components/chain/ChainPanel';
-import { FileJson, Link2 } from 'lucide-react';
+import { WorkflowPanel } from '@/components/workflow/WorkflowPanel';
+import { FileJson, Link2, Workflow } from 'lucide-react';
 
-type TabValue = 'request' | 'chain';
+type TabValue = 'request' | 'chain' | 'workflow';
 
 export function MainLayout() {
   const [activeTab, setActiveTab] = useState<TabValue>('request');
@@ -30,6 +32,10 @@ export function MainLayout() {
               <Link2 className="h-4 w-4" />
               Chain
             </TabsTrigger>
+            <TabsTrigger value="workflow" className="flex items-center gap-1">
+              <Workflow className="h-4 w-4" />
+              Workflow
+            </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -37,16 +43,16 @@ export function MainLayout() {
       <ResizablePanelGroup direction="horizontal" className="flex-1">
         <ResizablePanel defaultSize={20} minSize={15} maxSize={40}>
           <div className="h-full flex flex-col">
-            {activeTab === 'request' ? (
-              <Sidebar />
-            ) : (
-              <ChainSidebar />
-            )}
+            {activeTab === 'request' && <Sidebar />}
+            {activeTab === 'chain' && <ChainSidebar />}
+            {activeTab === 'workflow' && <WorkflowSidebar />}
           </div>
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={80}>
-          {activeTab === 'request' ? <RequestPanel /> : <ChainPanel />}
+          {activeTab === 'request' && <RequestPanel />}
+          {activeTab === 'chain' && <ChainPanel />}
+          {activeTab === 'workflow' && <WorkflowPanel />}
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>
