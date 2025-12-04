@@ -1,4 +1,5 @@
 import { useRequestStore } from '@/stores/requestStore';
+import { RequestHeader } from './RequestHeader';
 import { RequestBar } from './RequestBar';
 import { RequestTabs } from './RequestTabs';
 import { ResponsePanel } from './ResponsePanel';
@@ -21,6 +22,7 @@ export function RequestPanel() {
 
   return (
     <div className="h-full flex flex-col">
+      <RequestHeader />
       <RequestBar />
       <ResizablePanelGroup direction="vertical" className="flex-1">
         <ResizablePanel defaultSize={50} minSize={20}>

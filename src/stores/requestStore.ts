@@ -10,6 +10,9 @@ interface RequestState {
   // Current request
   currentRequest: Request | null;
 
+  // Unsaved requests (not in any collection)
+  unsavedRequests: Request[];
+
   // Response
   response: RequestResponse | null;
   isLoading: boolean;
@@ -32,6 +35,7 @@ interface RequestState {
   // Actions - Current Request
   setCurrentRequest: (request: Request | null) => void;
   updateCurrentRequest: (updates: Partial<Request>) => void;
+  createNewRequest: () => void;
 
   // Actions - Response
   setResponse: (response: RequestResponse | null) => void;
@@ -42,7 +46,7 @@ const generateId = () => crypto.randomUUID();
 
 const createDefaultRequest = (): Request => ({
   id: generateId(),
-  name: 'New Request',
+  name: 'Untitled Request',
   method: 'GET' as HttpMethod,
   url: '',
   headers: [],
@@ -58,6 +62,7 @@ export const useRequestStore = create<RequestState>()(
       collections: [],
       activeCollectionId: null,
       currentRequest: createDefaultRequest(),
+      unsavedRequests: [],
       response: null,
       isLoading: false,
 
@@ -255,9 +260,14 @@ export const useRequestStore = create<RequestState>()(
       updateCurrentRequest: (updates) => {
         set((state) => ({
           currentRequest: state.currentRequest
-            ? { ...state.currentRequest, ...updates }
+            ? { ...state.currentRequest, ...updates, updatedAt: new Date().toISOString() }
             : null,
         }));
+      },
+
+      createNewRequest: () => {
+        const newRequest = createDefaultRequest();
+        set({ currentRequest: newRequest, response: null });
       },
 
       // Response

@@ -4,10 +4,10 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useRequestStore } from '@/stores/requestStore';
 import { CollectionTree } from './CollectionTree';
-import { Plus } from 'lucide-react';
+import { FileJson, FolderPlus } from 'lucide-react';
 
 export function Sidebar() {
-  const { collections, addCollection } = useRequestStore();
+  const { collections, addCollection, createNewRequest } = useRequestStore();
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState('');
 
@@ -21,6 +21,18 @@ export function Sidebar() {
 
   return (
     <div className="h-full flex flex-col bg-muted/30">
+      <div className="p-3 border-b">
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full justify-start"
+          onClick={createNewRequest}
+        >
+          <FileJson className="h-4 w-4 mr-2" />
+          New Request
+        </Button>
+      </div>
+
       <div className="p-3 border-b flex items-center justify-between">
         <h2 className="font-semibold text-sm">Collections</h2>
         <Button
@@ -28,8 +40,9 @@ export function Sidebar() {
           size="icon"
           className="h-7 w-7"
           onClick={() => setIsAdding(true)}
+          title="Add Collection"
         >
-          <Plus className="h-4 w-4" />
+          <FolderPlus className="h-4 w-4" />
         </Button>
       </div>
 
