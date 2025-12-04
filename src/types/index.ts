@@ -44,3 +44,33 @@ export interface RequestResponse {
   body: string;
   time: number;
 }
+
+// Request Chain Types
+export interface ChainStep {
+  id: string;
+  request: Request;
+  order: number;
+}
+
+export interface ChainStepResult {
+  stepId: string;
+  request: Request;
+  response: RequestResponse | null;
+  error: string | null;
+  status: 'pending' | 'running' | 'success' | 'error';
+}
+
+export interface RequestChain {
+  id: string;
+  name: string;
+  steps: ChainStep[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChainExecutionResult {
+  chainId: string;
+  results: ChainStepResult[];
+  totalTime: number;
+  success: boolean;
+}
