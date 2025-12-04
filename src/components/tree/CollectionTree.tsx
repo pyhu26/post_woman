@@ -5,6 +5,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useRequestStore } from '@/stores/requestStore';
@@ -14,10 +15,12 @@ import {
   ChevronDown,
   Folder as FolderIcon,
   FolderOpen,
+  FolderPlus,
   MoreHorizontal,
-  Plus,
   FileJson,
   Trash2,
+  Pencil,
+  Copy,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -37,8 +40,10 @@ export function CollectionTree({ collection }: CollectionTreeProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [isAddingFolder, setIsAddingFolder] = useState(false);
   const [isAddingRequest, setIsAddingRequest] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
   const [newItemName, setNewItemName] = useState('');
-  const { addFolder, addRequest, deleteCollection } = useRequestStore();
+  const [editName, setEditName] = useState('');
+  const { addFolder, addRequest, deleteCollection, updateCollection } = useRequestStore();
 
   const handleAddFolder = () => {
     if (newItemName.trim()) {
@@ -63,6 +68,19 @@ export function CollectionTree({ collection }: CollectionTreeProps) {
     }
   };
 
+  const handleRename = () => {
+    if (editName.trim()) {
+      updateCollection(collection.id, editName.trim());
+      setIsRenaming(false);
+      setEditName('');
+    }
+  };
+
+  const startRename = () => {
+    setEditName(collection.name);
+    setIsRenaming(true);
+  };
+
   return (
     <div className="mb-1">
       <div className="flex items-center group rounded hover:bg-muted px-1 py-0.5">
@@ -78,9 +96,28 @@ export function CollectionTree({ collection }: CollectionTreeProps) {
             <ChevronRight className="h-3 w-3" />
           )}
         </Button>
-        <span className="flex-1 text-sm font-medium truncate ml-1">
-          {collection.name}
-        </span>
+
+        {isRenaming ? (
+          <Input
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleRename();
+              if (e.key === 'Escape') {
+                setIsRenaming(false);
+                setEditName('');
+              }
+            }}
+            onBlur={handleRename}
+            autoFocus
+            className="h-6 text-sm flex-1 ml-1"
+          />
+        ) : (
+          <span className="flex-1 text-sm font-medium truncate ml-1">
+            {collection.name}
+          </span>
+        )}
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -92,14 +129,20 @@ export function CollectionTree({ collection }: CollectionTreeProps) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setIsAddingFolder(true)}>
-              <FolderIcon className="h-4 w-4 mr-2" />
-              Add Folder
-            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setIsAddingRequest(true)}>
               <FileJson className="h-4 w-4 mr-2" />
               Add Request
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setIsAddingFolder(true)}>
+              <FolderPlus className="h-4 w-4 mr-2" />
+              Add Folder
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={startRename}>
+              <Pencil className="h-4 w-4 mr-2" />
+              Rename
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => deleteCollection(collection.id)}
               className="text-destructive"
@@ -165,22 +208,47 @@ interface FolderTreeProps {
 function FolderTree({ folder, collectionId }: FolderTreeProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isAddingRequest, setIsAddingRequest] = useState(false);
-  const [newRequestName, setNewRequestName] = useState('');
-  const { addRequest, deleteFolder } = useRequestStore();
+  const [isAddingFolder, setIsAddingFolder] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [newItemName, setNewItemName] = useState('');
+  const [editName, setEditName] = useState('');
+  const { addRequest, addFolder, deleteFolder, updateFolder } = useRequestStore();
 
   const handleAddRequest = () => {
-    if (newRequestName.trim()) {
+    if (newItemName.trim()) {
       addRequest(collectionId, folder.id, {
-        name: newRequestName.trim(),
+        name: newItemName.trim(),
         method: 'GET',
         url: '',
         headers: [],
         params: [],
         body: '',
       });
-      setNewRequestName('');
+      setNewItemName('');
       setIsAddingRequest(false);
     }
+  };
+
+  const handleAddFolder = () => {
+    if (newItemName.trim()) {
+      addFolder(collectionId, folder.id, newItemName.trim());
+      setNewItemName('');
+      setIsAddingFolder(false);
+      setIsExpanded(true);
+    }
+  };
+
+  const handleRename = () => {
+    if (editName.trim()) {
+      updateFolder(collectionId, folder.id, editName.trim());
+      setIsRenaming(false);
+      setEditName('');
+    }
+  };
+
+  const startRename = () => {
+    setEditName(folder.name);
+    setIsRenaming(true);
   };
 
   return (
@@ -203,7 +271,26 @@ function FolderTree({ folder, collectionId }: FolderTreeProps) {
         ) : (
           <FolderIcon className="h-3 w-3 text-muted-foreground ml-1" />
         )}
-        <span className="flex-1 text-sm truncate ml-1">{folder.name}</span>
+
+        {isRenaming ? (
+          <Input
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleRename();
+              if (e.key === 'Escape') {
+                setIsRenaming(false);
+                setEditName('');
+              }
+            }}
+            onBlur={handleRename}
+            autoFocus
+            className="h-6 text-sm flex-1 ml-1"
+          />
+        ) : (
+          <span className="flex-1 text-sm truncate ml-1">{folder.name}</span>
+        )}
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -215,10 +302,20 @@ function FolderTree({ folder, collectionId }: FolderTreeProps) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setIsAddingRequest(true)}>
-              <Plus className="h-4 w-4 mr-2" />
+            <DropdownMenuItem onClick={() => { setIsAddingRequest(true); setIsExpanded(true); }}>
+              <FileJson className="h-4 w-4 mr-2" />
               Add Request
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => { setIsAddingFolder(true); setIsExpanded(true); }}>
+              <FolderPlus className="h-4 w-4 mr-2" />
+              Add Folder
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={startRename}>
+              <Pencil className="h-4 w-4 mr-2" />
+              Rename
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => deleteFolder(collectionId, folder.id)}
               className="text-destructive"
@@ -232,17 +329,20 @@ function FolderTree({ folder, collectionId }: FolderTreeProps) {
 
       {isExpanded && (
         <div className="ml-4">
-          {isAddingRequest && (
+          {(isAddingRequest || isAddingFolder) && (
             <div className="py-1">
               <Input
-                placeholder="Request name"
-                value={newRequestName}
-                onChange={(e) => setNewRequestName(e.target.value)}
+                placeholder={isAddingFolder ? 'Folder name' : 'Request name'}
+                value={newItemName}
+                onChange={(e) => setNewItemName(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleAddRequest();
+                  if (e.key === 'Enter') {
+                    isAddingFolder ? handleAddFolder() : handleAddRequest();
+                  }
                   if (e.key === 'Escape') {
                     setIsAddingRequest(false);
-                    setNewRequestName('');
+                    setIsAddingFolder(false);
+                    setNewItemName('');
                   }
                 }}
                 autoFocus
@@ -280,8 +380,19 @@ interface RequestItemProps {
 }
 
 function RequestItem({ request, collectionId, folderId }: RequestItemProps) {
-  const { setCurrentRequest, deleteRequest, currentRequest } = useRequestStore();
+  const { setCurrentRequest, deleteRequest, currentRequest, addRequest } = useRequestStore();
   const isActive = currentRequest?.id === request.id;
+
+  const handleDuplicate = () => {
+    addRequest(collectionId, folderId, {
+      name: `${request.name} (copy)`,
+      method: request.method,
+      url: request.url,
+      headers: [...request.headers],
+      params: [...request.params],
+      body: request.body,
+    });
+  };
 
   return (
     <div
@@ -289,7 +400,7 @@ function RequestItem({ request, collectionId, folderId }: RequestItemProps) {
         'flex items-center group rounded px-1 py-0.5 cursor-pointer',
         isActive ? 'bg-primary/10' : 'hover:bg-muted'
       )}
-      onClick={() => setCurrentRequest(request)}
+      onClick={() => setCurrentRequest({ ...request })}
     >
       <span className={cn('text-xs font-mono w-12', METHOD_COLORS[request.method])}>
         {request.method}
@@ -307,6 +418,16 @@ function RequestItem({ request, collectionId, folderId }: RequestItemProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDuplicate();
+            }}
+          >
+            <Copy className="h-4 w-4 mr-2" />
+            Duplicate
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={(e) => {
               e.stopPropagation();
